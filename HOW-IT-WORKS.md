@@ -279,15 +279,33 @@ flips cancel out and you are back to wrong.
 
 ## 10. Current status
 
-Working and checked:
+Everything below was checked in a real browser, not just compiled.
 
 - the map, colours, zoom, pan
 - gene search and colouring
 - marker gene table
-- the maths (tested against scanpy)
+- the maths (tested against scanpy — see section 5)
+- **the AI chat, end to end**
 
-Not yet checked:
+The AI test that matters. Typing:
 
-- the AI chat. The AI service was returning an error (502, their side, not
-  ours) during testing. The connection code is correct and the request does
-  reach them — but a full conversation has not been seen working yet.
+> "What's the most highly expressed marker gene in T cells?"
+
+produces this, without any further help:
+
+1. The AI notices there are **two** T cell groups, picks CD4, and says so.
+2. It calls `run_deg`. A card appears: `✅ run_deg — 10 markers · top: LDHB, CD3D, RPS25`
+3. It writes one sentence about what it found.
+4. **In a new round**, it calls `query_genes` on LDHB.
+5. The map recolours. A colour bar appears with the real range.
+
+Steps 2 and 4 being **separate rounds** is the point. The AI is not running a
+script — it looks at each result before deciding what to do next.
+
+Other checks that passed:
+
+- "Highlight the monocytes" → finds **both** monocyte groups, dims the rest,
+  and makes **zero** network requests (it is a screen-only tool).
+- "Colour by cluster again" → resets cleanly, gene chips clear.
+- "Show me FAKEGENE1" → the AI searches, finds nothing, and explains. No freeze.
+- A megakaryocyte marker run passes the "only 15 cells" warning to the user.
