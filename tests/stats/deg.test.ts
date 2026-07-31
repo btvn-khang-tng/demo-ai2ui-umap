@@ -63,6 +63,14 @@ describe("rankGenesGroups — golden vs scanpy", () => {
     expect(top.log2fc).toBeCloseTo(2.195, 2);
     expect(top.pctIn).toBeCloseTo(0.922, 2);
     expect(top.pctOut).toBeCloseTo(0.486, 2);
+    
+    // BH correction for rank 1: fdr ≈ pval × nGenes / 1
+    // Check this relationship discriminates BH-before-slice from BH-after.
+    const expectedRatio = top.pval * meta.nGenes;
+    const ratio = top.fdr / expectedRatio;
+    expect(ratio).toBeCloseTo(1, 0);  // within 50% tolerance (0 decimal places)
+    
+    // Also verify FDR is still an extremely small number (sanity check).
     expect(top.fdr).toBeLessThan(1e-200);
   }, 60_000);
 });
