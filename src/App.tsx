@@ -7,8 +7,14 @@ import { GenePanel } from "./components/GenePanel";
 import { DegPanel } from "./components/DegPanel";
 import { Toolbar } from "./components/Toolbar";
 import { ChatPanel } from "./components/ChatPanel";
+import { useSingleCellCopilot } from "./hooks/copilot/useSingleCellCopilot";
 import "./styles/panels.css";
 import "./styles/chat.css";
+
+function CopilotTools() {
+  useSingleCellCopilot();
+  return null;
+}
 
 function ErrorBanner() {
   const { error, setError } = useViewStore();
@@ -32,6 +38,7 @@ export default function App() {
     <CopilotKitProvider runtimeUrl="/api/copilotkit">
       <DatasetProvider>
         <ViewProvider>
+          <CopilotTools />
           <div className="app-shell">
             <header className="app-header">
               <h1>single-cell copilot</h1>
