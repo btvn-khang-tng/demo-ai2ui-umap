@@ -67,7 +67,10 @@ function betai(a: number, b: number, x: number): number {
 }
 
 export function tTwoSidedP(t: number, df: number): number {
-  if (!Number.isFinite(t) || !Number.isFinite(df) || df <= 0) return 1;
+  // Distinguish Infinity (maximally significant, p→0) from NaN (no information, p=1)
+  if (Number.isFinite(t) === false && Number.isNaN(t)) return 1; // t is NaN
+  if (!Number.isFinite(df) || df <= 0) return 1;
+  if (Number.isFinite(t) === false) return 0; // t is ±Infinity, maximally significant
   const x = df / (df + t * t);
   return betai(df / 2, 0.5, x);
 }

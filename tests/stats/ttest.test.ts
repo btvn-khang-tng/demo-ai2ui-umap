@@ -38,6 +38,29 @@ describe("log2FoldChange", () => {
   it("is negative when the group is lower", () => {
     expect(log2FoldChange(Math.log1p(1), Math.log1p(4))).toBeCloseTo(-2, 6);
   });
+
+  // Tests for epsilon (1e-9) in denominator — protects against division by zero
+  it("returns exactly 0 when both means are 0 (epsilon prevents NaN)", () => {
+    const result = log2FoldChange(0, 0);
+    expect(result).toBe(0);
+    expect(Number.isNaN(result)).toBe(false);
+  });
+
+  it("returns a finite positive value when meanIn=log1p(3), meanOut=0 (group expressed, rest silent)", () => {
+    const result = log2FoldChange(Math.log1p(3), 0);
+    expect(Number.isFinite(result)).toBe(true);
+    expect(result).toBeGreaterThan(0);
+    // Without epsilon: log2(3/0) = Infinity; with epsilon: log2(3/1e-9) ≈ 31.48
+    expect(result).toBeGreaterThan(30);
+  });
+
+  it("returns a finite negative value when meanIn=0, meanOut=log1p(3) (rest expressed, group silent)", () => {
+    const result = log2FoldChange(0, Math.log1p(3));
+    expect(Number.isFinite(result)).toBe(true);
+    expect(result).toBeLessThan(0);
+    // Without epsilon: log2(0/3) = -Infinity; with epsilon: log2(1e-9/3) ≈ -31.48
+    expect(result).toBeLessThan(-30);
+  });
 });
 
 describe("tTwoSidedP", () => {
@@ -55,5 +78,27 @@ describe("tTwoSidedP", () => {
   it("does not underflow to exactly 0 for large t", () => {
     expect(tTwoSidedP(35.55, 1200)).toBeGreaterThan(0);
     expect(tTwoSidedP(35.55, 1200)).toBeLessThan(1e-100);
+  });
+
+  // Tests for infinite t-statistic — should give p=0 (maximally significant)
+  it("returns 0 when t is +Infinity (maximally significant)", () => {
+    expect(tTwoSidedP(Infinity, 10)).toBe(0);
+  });
+
+  it("returns 0 when t is -Infinity (maximally significant)", () => {
+    expect(tTwoSidedP(-Infinity, 10)).toBe(0);
+  });
+
+  // Tests for NaN and invalid df — should give p=1 (conservative fallback)
+  it("returns 1 when t is NaN (no information)", () => {
+    expect(tTwoSidedP(NaN, 10)).toBe(1);
+  });
+
+  it("returns 1 when df is NaN", () => {
+    expect(tTwoSidedP(5, NaN)).toBe(1);
+  });
+
+  it("returns 1 when df <= 0", () => {
+    expect(tTwoSidedP(5, 0)).toBe(1);
   });
 });
