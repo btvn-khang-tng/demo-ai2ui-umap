@@ -1,0 +1,90 @@
+/* Plain CSS, light theme only — no Tailwind, no component library. */
+
+/* Fixed-width right column housing the CopilotKit chat. */
+.app-chat-rail {
+  flex: 0 0 420px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.chat-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #d9dfe4;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.chat-panel-chat {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* StepCard: progress card for a single LLM tool call. Rendered inline in the
+   chat transcript by CopilotKit's tool-call renderer (wired in Task 14). */
+.step-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  margin: 0.3rem 0;
+  border: 1px solid #d9dfe4;
+  border-radius: 6px;
+  background: #f6f8fa;
+  font-size: 0.82rem;
+  color: #1f2933;
+}
+
+.step-card-icon {
+  flex: 0 0 auto;
+  line-height: 1;
+}
+
+.step-card-name {
+  flex: 0 0 auto;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.step-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #52606d;
+}
+
+.step-card-complete {
+  background: #f0f9f4;
+  border-color: #cdeedd;
+}
+
+.step-card-failed {
+  background: #fdecec;
+  border-color: #f3b7b7;
+}
+
+.step-card-failed .step-card-body {
+  color: #b91c1c;
+}
+
+.step-card-spinner {
+  flex: 0 0 auto;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 2px solid #d9dfe4;
+  border-top-color: #0072b2;
+  animation: step-card-spin 0.7s linear infinite;
+}
+
+@keyframes step-card-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
