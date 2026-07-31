@@ -160,7 +160,7 @@ a description. The AI can ask to run one.
 
 2. Browser sends to the AI:
       your message
-    + the 5 tool descriptions
+    + the 7 tool descriptions
     + what is on screen right now
 
 3. The AI replies: "run the tool run_deg with group = CD4 T cells"
@@ -204,7 +204,25 @@ Every tool call draws a small card in the chat:
 
 So you can always see what the AI is doing. Nothing happens invisibly.
 
-### Rule 3 — the AI can ask you a question
+### Rule 3 — the AI can see the screen
+
+Every message carries a small description of **what is on screen right now**:
+
+- each cluster's colour, as a hex code *and* a plain name ("green")
+- which clusters are dimmed
+- which colour scale is active
+- which genes are displayed, and their value ranges
+- the full list of marker gene names in the table
+
+So you can ask "what colour are the B cells?" or "is GZMB in the list?" and it
+answers **without running anything**. It reads the screen instead of guessing
+from memory of the conversation.
+
+There is a limit on how many genes can be drawn at once (4 — one panel each).
+That limit is in the description too, so if you ask for ten the AI tells you
+up front instead of quietly showing four.
+
+### Rule 4 — the AI can ask you a question
 
 Some requests are ambiguous. "T cells" could mean CD4 or CD8. Instead of
 guessing, the AI can call `ask_user_choice`, which **pauses the whole run**
