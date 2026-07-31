@@ -12,6 +12,7 @@ import "./styles/panels.css";
 import "./styles/chat.css";
 import "./styles/rail.css";
 import "./styles/activity.css";
+import "./styles/chart.css";
 
 /**
  * Registers the five LLM tools + the readable. Kept as its own component so

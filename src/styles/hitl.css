@@ -1,0 +1,122 @@
+/**
+ * `ask_user_choice` (human-in-the-loop) — the one tool card in this app that
+ * the user interacts with rather than just reads. Visual language matches
+ * `.step-card` (see chat.css): a bordered, rounded row with an icon and a
+ * body — but taller, since it needs room for a question plus a row of
+ * buttons. Uses the semantic tokens from rail.css so it stays in step with
+ * the rest of the app's light theme.
+ *
+ * ⚠️ This card renders inside CopilotKit's own message list
+ * (`.copilotKitMessages` and descendants), and CopilotKit's v2 chat UI
+ * redefines `--accent` (to its own shadcn-style `oklch(97% 0 0)` — a
+ * near-white muted token, nothing like rail.css's blue) and `--radius`
+ * partway down that tree. Custom properties cascade to the nearest
+ * ancestor definition, so inside the message list rail.css's :root values
+ * for exactly those two names are shadowed — verified live: the option
+ * buttons rendered white-on-white before this override existed. Every
+ * other rail.css token (--surface, --line, --ink*, --accent-soft,
+ * --space-*, --ease-out) is untouched by CopilotKit and passes through
+ * normally. Pin the two collisions back to rail.css's own values so this
+ * component isn't at the mercy of CopilotKit's internal theming.
+ */
+
+.hitl-card {
+  --accent: #1e40af;
+  --radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  margin: var(--space-2) 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.hitl-card-executing {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.hitl-card-complete {
+  background: var(--surface);
+}
+
+.hitl-card-icon {
+  flex: 0 0 auto;
+  line-height: 1.3;
+}
+
+.hitl-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hitl-question {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.hitl-answer {
+  color: var(--ink-muted);
+}
+
+.hitl-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hitl-option-btn,
+.hitl-cancel-btn {
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out),
+    color 150ms var(--ease-out);
+}
+
+.hitl-option-btn {
+  border: 1px solid var(--accent);
+  background: var(--surface);
+  /* --accent is 8.6:1 on white per rail.css — well above 4.5:1 */
+  color: var(--accent);
+}
+
+.hitl-option-btn:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.hitl-cancel-btn {
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-muted);
+}
+
+.hitl-cancel-btn:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.hitl-option-btn:focus-visible,
+.hitl-cancel-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hitl-option-btn,
+  .hitl-cancel-btn {
+    transition: none;
+  }
+}

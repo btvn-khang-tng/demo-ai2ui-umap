@@ -56,6 +56,11 @@ export function AgentActivityBar() {
   // every `onAgentRunStarted`, and that bookkeeping must not itself cause a
   // render (only the `setPhase`/`setReasoning` calls inside it should).
   const agentSubRef = useRef<{ unsubscribe: () => void } | null>(null);
+  // The agent instance for the run in flight. `stopAgent` needs it, and the
+  // only place it is handed to us is the run-started event.
+  const activeAgentRef = useRef<Parameters<
+    NonNullable<Parameters<typeof copilotkit.subscribe>[0]["onAgentRunStarted"]>
+  >[0]["agent"] | null>(null);
 
   useEffect(() => {
     const teardownAgentSub = () => {
@@ -69,6 +74,7 @@ export function AgentActivityBar() {
         // clear (see file header: "the next successful run clears it").
         setPhase({ kind: "thinking" });
         setReasoning("");
+        activeAgentRef.current = event.agent;
         teardownAgentSub();
         agentSubRef.current = event.agent.subscribe({
           onReasoningMessageContentEvent: ({ reasoningMessageBuffer }) => {
@@ -148,6 +154,27 @@ export function AgentActivityBar() {
       </span>
       <span className="agent-activity-bar-label">{label}</span>
       {detail && <span className={detailClass}>{detail}</span>}
+
+      {/* Stop is only reachable while a run is in flight. `stopAgent` aborts
+          the AbortSignal handed to every tool handler, so an in-progress DEG
+          fetch is cancelled too rather than landing after the user gave up. */}
+      {isBusy && (
+        <button
+          type="button"
+          className="agent-activity-bar-stop"
+          onClick={() => {
+            const agent = activeAgentRef.current;
+            if (!agent) return;
+            copilotkit.stopAgent({ agent });
+            // Don't wait for an event to land us back at idle: the whole
+            // point of Stop is immediate feedback.
+            setPhase({ kind: "idle" });
+            setReasoning("");
+          }}
+        >
+          Stop
+        </button>
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@
  * Clicking a row calls `displayGenes` — the SAME fetch-then-store path
  * `GenePanel`'s input box uses. There is no second "show this gene" path.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDatasetStore } from "../state/useDatasetStore";
 import { useViewStore } from "../state/useViewStore";
 import { runDeg } from "../lib/api";
@@ -31,6 +31,22 @@ export function DegPanel() {
 
   const clusters = data?.clusters ?? [];
   const effectiveGroup = group || clusters[0]?.label || "";
+
+  // Follow whatever produced the table currently on screen — including a
+  // `run_deg` the LLM issued from chat. Without this the picker keeps showing
+  // its own stale choice while the table below it shows the agent's group,
+  // and the two controls disagree about what you are looking at.
+  //
+  // Keyed on `lastDeg.group` (not the object) so re-running the same group
+  // does not fight a selection the user is in the middle of making.
+  const lastDegGroup = lastDeg?.group;
+  useEffect(() => {
+    if (lastDegGroup) setGroup(lastDegGroup);
+  }, [lastDegGroup]);
+
+  // True while the picker names a different group than the table shows — i.e.
+  // the user has chosen something they have not run yet.
+  const pendingChange = !!lastDeg && effectiveGroup !== lastDeg.group;
 
   const handleRun = async () => {
     if (!effectiveGroup) {
@@ -67,7 +83,12 @@ export function DegPanel() {
             </option>
           ))}
         </select>
-        <button type="button" onClick={() => void handleRun()} disabled={running}>
+        <button
+          type="button"
+          className={`deg-run-button${pendingChange ? " is-pending" : ""}`}
+          onClick={() => void handleRun()}
+          disabled={running}
+        >
           {running ? "Running…" : "Run DEG"}
         </button>
       </div>

@@ -12,8 +12,11 @@
 import { z } from "zod";
 import { useFrontendTool } from "@copilotkit/react-core/v2";
 import { StepCard } from "../../components/StepCard";
+import { MarkerChart } from "../../components/MarkerChart";
 import { useViewStore } from "../../state/useViewStore";
 import { runDeg } from "../../lib/api";
+import { displayGenes } from "../../lib/geneDisplay";
+import type { Marker } from "../../lib/types";
 
 const paramsSchema = z.object({
   group: z
@@ -28,7 +31,7 @@ const paramsSchema = z.object({
 });
 
 export function useRunDegTool(): void {
-  const { setLastDeg } = useViewStore();
+  const { setLastDeg, genes, showGenes, setError } = useViewStore();
 
   useFrontendTool(
     {
@@ -53,8 +56,48 @@ export function useRunDegTool(): void {
           };
         }
       },
-      render: (props) => <StepCard {...props} />,
+      /**
+       * The agent's answer renders as an interactive chart, not just a status
+       * line. `result` arrives as a string, so it is parsed defensively —
+       * a malformed or partial result must fall back to the plain card rather
+       * than break the transcript.
+       *
+       * Clicking a bar routes through `displayGenes`, the same fetch-then-
+       * store path the manual gene box uses. So the chart the LLM produced is
+       * a real control over the app, and it cannot drift from the manual path.
+       */
+      render: (props) => {
+        let markers: Marker[] = [];
+        let group = "";
+        if (props.status === "complete" && typeof props.result === "string") {
+          try {
+            const parsed = JSON.parse(props.result);
+            if (parsed?.success && Array.isArray(parsed.markers)) {
+              markers = parsed.markers;
+              group = String(parsed.message ?? "").split(" for ")[1] ?? "";
+              group = group.split(" (")[0] ?? "";
+            }
+          } catch {
+            /* fall through to the plain card */
+          }
+        }
+
+        return (
+          <>
+            <StepCard {...props} />
+            {markers.length > 0 && (
+              <MarkerChart
+                markers={markers}
+                group={group}
+                onSelectGene={(gene) =>
+                  void displayGenes([gene], genes, { showGenes, setError })
+                }
+              />
+            )}
+          </>
+        );
+      },
     },
-    [setLastDeg]
+    [setLastDeg, genes, showGenes, setError]
   );
 }
