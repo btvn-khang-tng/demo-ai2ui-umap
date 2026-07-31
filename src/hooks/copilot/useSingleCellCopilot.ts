@@ -10,8 +10,8 @@ import { useColorByClusterTool } from "./useColorByClusterTool";
 import { useSearchGenesTool } from "./useSearchGenesTool";
 import { useHighlightClustersTool } from "./useHighlightClustersTool";
 import { useSetColorRampTool } from "./useSetColorRampTool";
+import { useAskUserChoiceTool } from "./useAskUserChoiceTool";
 import { useSingleCellReadable } from "./useSingleCellReadable";
-import { useAskUserChoiceTool } from "./useAskUserChoiceTool"; // TEMP: manual test only, revert before commit
 
 export function useSingleCellCopilot(): void {
   useRunDegTool();
@@ -20,6 +20,8 @@ export function useSingleCellCopilot(): void {
   useSearchGenesTool();
   useHighlightClustersTool();
   useSetColorRampTool();
+  // Human-in-the-loop: pauses the run and asks, instead of guessing, when a
+  // cell-type reference is ambiguous (two T-cell and two monocyte populations).
+  useAskUserChoiceTool();
   useSingleCellReadable();
-  useAskUserChoiceTool(); // TEMP: manual test only, revert before commit
 }
