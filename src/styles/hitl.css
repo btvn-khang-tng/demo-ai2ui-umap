@@ -6,42 +6,56 @@
  * buttons. Uses the semantic tokens from rail.css so it stays in step with
  * the rest of the app's light theme.
  *
- * ⚠️ This card renders inside CopilotKit's own message list
- * (`.copilotKitMessages` and descendants), and CopilotKit's v2 chat UI
- * redefines `--accent` (to its own shadcn-style `oklch(97% 0 0)` — a
- * near-white muted token, nothing like rail.css's blue) and `--radius`
- * partway down that tree. Custom properties cascade to the nearest
- * ancestor definition, so inside the message list rail.css's :root values
- * for exactly those two names are shadowed — verified live: the option
- * buttons rendered white-on-white before this override existed. Every
- * other rail.css token (--surface, --line, --ink*, --accent-soft,
- * --space-*, --ease-out) is untouched by CopilotKit and passes through
- * normally. Pin the two collisions back to rail.css's own values so this
- * component isn't at the mercy of CopilotKit's internal theming.
+ * ⚠️ This card renders inside CopilotKit's own chat tree, which redefines
+ * some of our token names on `.copilotKitChat`. Measured live:
+ *
+ *   --accent  :root #0e7490  →  in chat  oklch(97% 0 0)   SHADOWED (near-white)
+ *   --radius  :root 8px      →  in chat  .625rem          SHADOWED
+ *   everything else (--surface, --line, --ink*, --accent-soft, --space-*,
+ *   --ease-out, --radius-sm) passes through unchanged.
+ *
+ * A near-white `--accent` is what made the hover state unreadable: a
+ * `background: var(--accent)` + `color: var(--surface)` button rendered
+ * white-on-white.
+ *
+ * Pinning the generic names on this card worked but was fragile — any future
+ * CopilotKit release that shadows one more name silently breaks a control the
+ * user has to click. So the critical colours now use **component-scoped
+ * names** (`--hitl-*`) that nothing outside this file defines. Generic tokens
+ * are still used for spacing and incidental colour, where a shadow would be
+ * cosmetic rather than making text vanish.
  */
 
 .hitl-card {
-  --accent: #1e40af;
-  --radius: 8px;
+  /* Own namespace — uncollidable. Bio palette, same values as :root. */
+  --hitl-accent: #0e7490;
+  --hitl-accent-hover: #0a596f;
+  --hitl-on-accent: #ffffff;
+  --hitl-surface: #ffffff;
+  --hitl-ink: #0c4a6e;
+  --hitl-ink-muted: #4a6b80;
+  --hitl-line: #cfe3ee;
+  --hitl-radius: 8px;
+  --hitl-radius-sm: 5px;
   display: flex;
   align-items: flex-start;
   gap: var(--space-2);
   padding: var(--space-3);
   margin: var(--space-2) 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface-sunken);
+  border: 1px solid var(--hitl-line);
+  border-radius: var(--hitl-radius);
+  background: #f4fafd;
   font-size: 0.82rem;
-  color: var(--ink);
+  color: var(--hitl-ink);
 }
 
 .hitl-card-executing {
-  background: var(--accent-soft);
-  border-color: var(--accent);
+  background: #e2f2f8;
+  border-color: var(--hitl-accent);
 }
 
 .hitl-card-complete {
-  background: var(--surface);
+  background: var(--hitl-surface);
 }
 
 .hitl-card-icon {
@@ -59,11 +73,11 @@
 
 .hitl-question {
   font-weight: 600;
-  color: var(--ink);
+  color: var(--hitl-ink);
 }
 
 .hitl-answer {
-  color: var(--ink-muted);
+  color: var(--hitl-ink-muted);
 }
 
 .hitl-options {
@@ -78,39 +92,43 @@
   font-size: 0.8rem;
   font-weight: 600;
   padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: var(--hitl-radius-sm);
   cursor: pointer;
   transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out),
     color 150ms var(--ease-out);
 }
 
 .hitl-option-btn {
-  border: 1px solid var(--accent);
-  background: var(--surface);
-  /* --accent is 8.6:1 on white per rail.css — well above 4.5:1 */
-  color: var(--accent);
+  border: 1px solid var(--hitl-accent);
+  background: var(--hitl-surface);
+  /* #0e7490 on white = 5.36:1 */
+  color: var(--hitl-accent);
 }
 
+/* Filled on hover. Both values are literal-backed and uncollidable, so the
+   label can never end up the same colour as the fill.
+   #ffffff on #0a596f = 7.4:1. */
 .hitl-option-btn:hover {
-  background: var(--accent);
-  color: var(--surface);
+  background: var(--hitl-accent-hover);
+  border-color: var(--hitl-accent-hover);
+  color: var(--hitl-on-accent);
 }
 
 .hitl-cancel-btn {
-  border: 1px solid var(--line-strong);
-  background: var(--surface);
-  color: var(--ink-muted);
+  border: 1px solid #a9cfe3;
+  background: var(--hitl-surface);
+  color: var(--hitl-ink-muted);
 }
 
 .hitl-cancel-btn:hover {
-  border-color: var(--line-strong);
-  background: var(--surface-hover);
-  color: var(--ink);
+  border-color: #4a6b80;
+  background: #e6f2f8;
+  color: var(--hitl-ink);
 }
 
 .hitl-option-btn:focus-visible,
 .hitl-cancel-btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--hitl-accent);
   outline-offset: 2px;
 }
 

@@ -16,6 +16,7 @@ import { MarkerChart } from "../../components/MarkerChart";
 import { useViewStore } from "../../state/useViewStore";
 import { runDeg } from "../../lib/api";
 import { displayGenes } from "../../lib/geneDisplay";
+import { FULL_MARKER_COUNT, TRANSCRIPT_MARKERS } from "../../lib/constants";
 import type { Marker } from "../../lib/types";
 
 const paramsSchema = z.object({
@@ -27,7 +28,12 @@ const paramsSchema = z.object({
   topN: z
     .number()
     .optional()
-    .describe("Number of markers to compute (server default 100)."),
+    .describe(
+      "How many markers to REPORT back to you in the result. This does not " +
+        "limit what the user sees — the marker table always fills with the " +
+        "full ranked list regardless. Omit unless the user asked for a " +
+        "specific number."
+    ),
 });
 
 export function useRunDegTool(): void {
@@ -41,13 +47,29 @@ export function useRunDegTool(): void {
       parameters: paramsSchema,
       handler: async ({ group, topN }, { signal }) => {
         try {
-          const deg = await runDeg(group, topN ?? 100, signal);
-          setLastDeg(deg); // full ~100 markers -> DegPanel
+          // ⚠️ Always compute the FULL list, whatever `topN` the model chose.
+          // It used to pass topN straight through, so "what's the top marker
+          // in B cells?" made the model request topN=1 — and the marker table
+          // the user is looking at filled with exactly one row. The panel is
+          // the user's view, not the model's; its contents should not shrink
+          // because of how the question was phrased.
+          const deg = await runDeg(group, FULL_MARKER_COUNT, signal);
+          setLastDeg(deg); // full ranked list -> DegPanel + chart
+
+          // The transcript gets a bounded slice — the model re-reads every
+          // tool result on every later turn, so 100 rows x 6 fields would be
+          // ~3k tokens of dead weight per turn. Never fewer than 10, so the
+          // in-chat chart stays worth drawing even if the model asked for 1.
+          const reportCount = Math.min(
+            Math.max(topN ?? TRANSCRIPT_MARKERS, TRANSCRIPT_MARKERS),
+            25
+          );
+
           return {
             success: true,
-            message: `${deg.markers.length} markers for ${deg.group} (${deg.nCellsGroup} cells vs ${deg.nCellsReference})`,
+            message: `${deg.markers.length} markers for ${deg.group} (${deg.nCellsGroup} cells vs ${deg.nCellsReference}). The full ranked table is on screen; the top ${reportCount} are below.`,
             warning: deg.warning,
-            markers: deg.markers.slice(0, 10), // only ~10 into the transcript
+            markers: deg.markers.slice(0, reportCount),
           };
         } catch (e) {
           return {

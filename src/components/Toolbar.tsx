@@ -7,6 +7,7 @@
 import { useDatasetStore } from "../state/useDatasetStore";
 import { useViewStore } from "../state/useViewStore";
 import { RampControl } from "./RampControl";
+import { ClearChatButton } from "./ClearChatButton";
 
 export function Toolbar() {
   const { data } = useDatasetStore();
@@ -27,8 +28,10 @@ export function Toolbar() {
       {/* Only meaningful in expression mode — in cluster mode the ramp isn't
           driving anything, so showing it would be a dead control. */}
       {colorMode === "expression" && genes.length > 0 && <RampControl />}
+      <ClearChatButton />
+      {/* "Reset" clears the VIEW; "Clear chat" clears the CONVERSATION. */}
       <button type="button" className="toolbar-reset" onClick={colorByCluster}>
-        Reset
+        Reset view
       </button>
     </div>
   );

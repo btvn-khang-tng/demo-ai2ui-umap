@@ -160,7 +160,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 3px 8px 3px 4px;
+  padding: 4px 6px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--surface);
@@ -201,4 +201,10 @@
   .ramp-control {
     transition: none;
   }
+}
+
+/* Label removed — the gradient is the label, so the swatch is the control.
+   Slightly wider now that it stands alone and has to stay legible. */
+.ramp-control-swatch {
+  width: 60px;
 }

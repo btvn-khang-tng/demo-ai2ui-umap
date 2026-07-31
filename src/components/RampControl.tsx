@@ -39,12 +39,15 @@ export function RampControl() {
       aria-label={`Colour ramp: ${RAMPS[ramp].label}. Switch to ${RAMPS[next].label}.`}
       title={`Switch to ${RAMPS[next].label}`}
     >
+      {/* Swatch only — the gradient IS the label. The name sat beside it
+          restating in words what the colours already show, which is exactly
+          the redundancy this control was built to remove. The name still
+          reaches screen readers and hover via aria-label/title above. */}
       <span
         className="ramp-control-swatch"
         style={{ backgroundImage: gradientOf(RAMPS[ramp].colors) }}
         aria-hidden="true"
       />
-      <span className="ramp-control-label">{RAMPS[ramp].label}</span>
     </button>
   );
 }

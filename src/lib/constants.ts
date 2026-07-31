@@ -18,3 +18,17 @@ export const MAX_GENE_SEARCH_LIMIT = 200;
 
 /** Opacity applied to clusters NOT in `ViewState.highlighted` (~15%, per spec). */
 export const DIMMED_OPACITY = 0.15;
+
+/**
+ * How many markers the server computes for a DEG run. The marker table always
+ * shows this many, regardless of how the user phrased the question — asking
+ * "what's the TOP marker?" must not shrink the table to one row.
+ */
+export const FULL_MARKER_COUNT = 100;
+
+/**
+ * How many markers go back to the model in a tool result. The model re-reads
+ * every result on every later turn, so the full table would be ~3k tokens of
+ * dead weight per turn; the user can already see it on screen.
+ */
+export const TRANSCRIPT_MARKERS = 10;
