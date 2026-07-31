@@ -1,0 +1,209 @@
+/**
+ * Right rail (tabbed: Assistant / Genes / Markers) and the gradient ramp
+ * control, plus the semantic tokens the app shell uses.
+ *
+ * Register: data-dense tool. Density over decoration — tight padding, tabular
+ * figures, quiet chrome, and no ornament competing with the plot. Motion is
+ * 150-200ms and only ever conveys state.
+ */
+
+:root {
+  /* Surfaces */
+  --surface: #ffffff;
+  --surface-sunken: #f7f9fb;
+  --surface-hover: #eef2f6;
+
+  /* Lines */
+  --line: #dde4ea;
+  --line-strong: #c6d0d9;
+
+  /* Text — both checked against --surface:
+     --ink 15.8:1, --ink-muted 7.0:1. Body text never uses anything lighter. */
+  --ink: #1b2733;
+  --ink-muted: #52606d;
+
+  /* Accent — 8.6:1 on white. Selection and current state only, never
+     decoration; the cluster palette owns all data colour. */
+  --accent: #1e40af;
+  --accent-soft: #eef3fb;
+
+  /* 4pt spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  --radius: 8px;
+  --radius-sm: 5px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---- Right rail --------------------------------------------------------- */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.rail-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: var(--space-1);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-sunken);
+}
+
+.rail-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 0;
+  /* 30px tall — comfortably clickable on desktop without wasting rail height */
+  padding: 6px var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
+}
+
+.rail-tab:hover {
+  background: var(--surface-hover);
+  color: var(--ink);
+}
+
+.rail-tab.is-active {
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 24, 32, 0.06);
+}
+
+.rail-tab:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* Live count for a panel you cannot currently see — the reason tabs are
+   acceptable here at all. */
+.rail-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail-tab.is-active .rail-tab-badge {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+.rail-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rail-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The assistant panel stays mounted so the transcript survives tab switches;
+   `display:none` is what hides it. Do not swap this for conditional render. */
+.rail-panel.is-hidden {
+  display: none;
+}
+
+/* Inside the rail the panels are already framed by it — drop their own
+   borders so we never get a box inside a box. */
+.rail-panel .gene-panel,
+.rail-panel .deg-panel {
+  border: none;
+  border-radius: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.rail-panel .gene-panel {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.rail-panel .gene-panel-input-row {
+  width: 100%;
+}
+
+/* ---- Ramp control ------------------------------------------------------- */
+
+.ramp-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px 8px 3px 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  transition: border-color 150ms var(--ease-out), background-color 150ms var(--ease-out);
+}
+
+.ramp-control:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.ramp-control:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* The control's whole point: show the scale instead of naming it. */
+.ramp-control-swatch {
+  display: block;
+  width: 52px;
+  height: 14px;
+  border-radius: 999px;
+  /* Hairline keeps the pale end of grey→red from dissolving into the button */
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 32, 0.12);
+}
+
+.ramp-control-label {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rail-tab,
+  .ramp-control {
+    transition: none;
+  }
+}

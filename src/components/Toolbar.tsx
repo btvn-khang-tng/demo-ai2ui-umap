@@ -6,10 +6,11 @@
  */
 import { useDatasetStore } from "../state/useDatasetStore";
 import { useViewStore } from "../state/useViewStore";
+import { RampControl } from "./RampControl";
 
 export function Toolbar() {
   const { data } = useDatasetStore();
-  const { colorMode, genes, ramp, setRamp, colorByCluster } = useViewStore();
+  const { colorMode, genes, colorByCluster } = useViewStore();
 
   const modeLabel =
     colorMode === "expression" && genes.length > 0
@@ -23,15 +24,10 @@ export function Toolbar() {
         {modeLabel}
       </div>
       <div className="toolbar-spacer" />
-      <button
-        type="button"
-        className="toolbar-ramp-toggle"
-        onClick={() => setRamp(ramp === "expression" ? "viridis" : "expression")}
-        title="Toggle expression colour ramp"
-      >
-        Ramp: {ramp === "expression" ? "grey → red" : "viridis"}
-      </button>
-      <button type="button" onClick={colorByCluster}>
+      {/* Only meaningful in expression mode — in cluster mode the ramp isn't
+          driving anything, so showing it would be a dead control. */}
+      {colorMode === "expression" && genes.length > 0 && <RampControl />}
+      <button type="button" className="toolbar-reset" onClick={colorByCluster}>
         Reset
       </button>
     </div>

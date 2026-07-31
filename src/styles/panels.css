@@ -96,16 +96,8 @@
   min-height: 0;
 }
 
-/* The drawer is content-sized but capped, so a 100-row marker table can
-   never squeeze the plot out. Its own table scrolls instead. */
-.app-drawer {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  max-height: 32vh;
-  min-height: 0;
-}
+/* (The bottom drawer that briefly lived here is gone — the gene and marker
+   panels now live in the tabbed right rail, see rail.css.) */
 
 /* Gene panel — one row in the drawer: input on the left, chips flowing to
    its right. Stacked it wasted a full row of height on an input that only

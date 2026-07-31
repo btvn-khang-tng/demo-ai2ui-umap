@@ -3,14 +3,20 @@ import "@copilotkit/react-core/v2/styles.css";
 import { DatasetProvider } from "./state/useDatasetStore";
 import { ViewProvider, useViewStore } from "./state/useViewStore";
 import { ScatterView } from "./components/ScatterView";
-import { GenePanel } from "./components/GenePanel";
-import { DegPanel } from "./components/DegPanel";
 import { Toolbar } from "./components/Toolbar";
-import { ChatPanel } from "./components/ChatPanel";
+import { RightRail } from "./components/RightRail";
+import { AgentActivityBar } from "./components/AgentActivityBar";
 import { useSingleCellCopilot } from "./hooks/copilot/useSingleCellCopilot";
 import "./styles/panels.css";
 import "./styles/chat.css";
+import "./styles/rail.css";
+import "./styles/activity.css";
 
+/**
+ * Registers the five LLM tools + the readable. Kept as its own component so
+ * the hooks run inside the providers they depend on. Deleting
+ * `src/hooks/copilot/` and this component leaves a fully working manual app.
+ */
 function CopilotTools() {
   useSingleCellCopilot();
   return null;
@@ -47,24 +53,22 @@ export default function App() {
             <main className="app-main">
               <div className="app-main-content">
                 <ErrorBanner />
+                {/* Plot left, everything else in one tabbed rail right.
+                    The gene box and marker table were briefly a bottom drawer;
+                    horizontally split reads better for a wide plot, and the
+                    rail lets each panel use the full column height instead of
+                    three things fighting over one. */}
                 <div className="app-body">
-                  {/* Scatter on top, gene + marker panels in a drawer beneath.
-                      Previously both panels were a fixed 320px side column and
-                      the legend another 220px; with the 420px chat rail that
-                      left the plot under half the window. Stacking them gives
-                      the scatter the full working width, which suits a
-                      landscape UMAP better than a narrow portrait strip. */}
                   <div className="app-work-area">
                     <div className="app-scatter-area">
                       <ScatterView />
                     </div>
-                    <div className="app-drawer">
-                      <GenePanel />
-                      <DegPanel />
-                    </div>
+                    {/* Under the plot, not in the chat — it reports on the
+                        app, not the conversation. */}
+                    <AgentActivityBar />
                   </div>
                   <div className="app-chat-rail">
-                    <ChatPanel />
+                    <RightRail />
                   </div>
                 </div>
               </div>
