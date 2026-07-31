@@ -26,4 +26,20 @@ describe("benjaminiHochberg", () => {
   it("handles a single p-value", () => {
     expect(Array.from(benjaminiHochberg([0.3]))[0]).toBeCloseTo(0.3, 12);
   });
+
+  it("clamps raw q values exceeding 1 — single high value", () => {
+    const q = benjaminiHochberg([1.2]);
+    expect(q[0]).toBeLessThanOrEqual(1.0);
+  });
+
+  it("clamps raw q values exceeding 1 — multiple high values", () => {
+    const q = benjaminiHochberg([1.1, 1.2]);
+    expect(q[0]).toBeLessThanOrEqual(1.0);
+    expect(q[1]).toBeLessThanOrEqual(1.0);
+  });
+
+  it("clamps mixed valid and supraunit p-values", () => {
+    const q = benjaminiHochberg([0.5, 1.5]);
+    for (const v of q) expect(v).toBeLessThanOrEqual(1.0);
+  });
 });
