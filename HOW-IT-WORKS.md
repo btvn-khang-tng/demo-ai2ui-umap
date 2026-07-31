@@ -206,30 +206,40 @@ So you can always see what the AI is doing. Nothing happens invisibly.
 
 ## 7. The screen layout
 
+Three columns. Everything is visible at the same time.
+
 ```
-┌──────────────────────────────────────────┬──────────────┐
-│ title            ramp toggle    reset    │              │
-├──────────────────────────────────────────┤              │
-│                                          │              │
-│   THE MAP                                │   AI CHAT    │
-│    ┌──────────┐                          │              │
-│    │ colour   │  ← legend floats on top  │              │
-│    │ key      │    (click to collapse)   │              │
-│    └──────────┘                          │              │
-│                                          │              │
-├──────────────────────────────────────────┤              │
-│ gene box  [MS4A1 ×] [CD3D ×]             │              │
-├──────────────────────────────────────────┤              │
-│ marker table: gene · log2FC · FDR · %    │              │
-└──────────────────────────────────────────┴──────────────┘
+┌────────────────────────────┬─────────────┬─────────────┐
+│ title       ramp    reset  │             │             │
+├────────────────────────────┼─────────────┼─────────────┤
+│                            │  Genes      │             │
+│   THE MAP                  │  [box]      │             │
+│   ┌──────────┐             │  [MS4A1 ×]  │   AI CHAT   │
+│   │ colour   │ ← floats    │             │             │
+│   │ key      │   on top    ├─────────────┤   you type  │
+│   └──────────┘             │  Markers    │   here      │
+│                            │  gene log2FC│             │
+│                            │  FDR  % in  │             │
+├────────────────────────────┤  ...        │             │
+│ ● Ready   ← what the AI    │             │             │
+│             is doing now   │             │             │
+└────────────────────────────┴─────────────┴─────────────┘
 ```
 
-The colour key sits **on top of** the map, not beside it. This was changed on
-purpose: as a side column it used 220px of width forever. Floating, it uses
-none. Click its title to shrink it to a row of colour dots.
+**Why nothing is hidden.** This app is for watching the AI work. If the marker
+table were behind a tab, the AI could fill it while you were reading the chat
+and you would see nothing happen. So both data panels stay on screen.
 
-The gene box and the marker table sit **under** the map, not beside it. The
-map is wide and short, which suits this kind of plot.
+**Panels flash when they change.** When the AI (or you) changes the genes or
+the markers, that panel lights up for about one second. If you were looking
+somewhere else, you still notice.
+
+**The colour key floats on the map** instead of taking its own column. As a
+column it used 220px forever. Click its title to shrink it to a row of dots.
+
+**The bar under the map** shows what the AI is doing right now: `Ready`,
+`Thinking`, `Calling run_deg`, or an error. It is under the map, not in the
+chat, because it reports on the app, not the conversation.
 
 ---
 
