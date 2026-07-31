@@ -17,6 +17,7 @@
 
 import * as fs from "node:fs";
 import * as hdf5 from "h5wasm/node";
+import { transposeCsrToCsc } from "../src/server/stats/sparse.js";
 
 const URL =
   "https://raw.githubusercontent.com/chanzuckerberg/cellxgene/main/example-dataset/pbmc3k.h5ad";
@@ -113,22 +114,10 @@ console.log(
 // column; DEG iterates gene by gene). With CSC both are a contiguous slice.
 // Do it once, offline, with a counting sort — O(nnz).
 
-const colCounts = new Int32Array(nGenes);
-for (let k = 0; k < indices.length; k++) colCounts[indices[k]]++;
-
-const colPtr = new Int32Array(nGenes + 1);
-for (let j = 0; j < nGenes; j++) colPtr[j + 1] = colPtr[j] + colCounts[j];
-
-const cursor = Int32Array.from(colPtr.subarray(0, nGenes));
-const cscData = new Float32Array(data.length);
-const cscRows = new Int32Array(data.length);
-for (let row = 0; row < nCells; row++) {
-  for (let k = rowPtr[row]; k < rowPtr[row + 1]; k++) {
-    const dst = cursor[indices[k]]++;
-    cscData[dst] = data[k];
-    cscRows[dst] = row;
-  }
-}
+const csc = transposeCsrToCsc(data, indices, rowPtr, nCells, nGenes);
+const cscData = csc.data;
+const cscRows = csc.rows;
+const colPtr = csc.colPtr;
 
 // ---- Step 7: Extract the DEG oracle fixture --------------------------------
 //
