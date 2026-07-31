@@ -7,38 +7,9 @@
  * 150-200ms and only ever conveys state.
  */
 
-:root {
-  /* Surfaces */
-  --surface: #ffffff;
-  --surface-sunken: #f7f9fb;
-  --surface-hover: #eef2f6;
+/* Tokens live in src/index.css — one source of truth, so the palette
+   cannot drift between the shell and the rail. */
 
-  /* Lines */
-  --line: #dde4ea;
-  --line-strong: #c6d0d9;
-
-  /* Text — both checked against --surface:
-     --ink 15.8:1, --ink-muted 7.0:1. Body text never uses anything lighter. */
-  --ink: #1b2733;
-  --ink-muted: #52606d;
-
-  /* Accent — 8.6:1 on white. Selection and current state only, never
-     decoration; the cluster palette owns all data colour. */
-  --accent: #1e40af;
-  --accent-soft: #eef3fb;
-
-  /* 4pt spacing scale */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-
-  --radius: 8px;
-  --radius-sm: 5px;
-
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-}
 
 /* ---- Data rail: genes + markers, both always visible --------------------
    Not tabbed. The agent fills these panels as it works, and a hidden panel

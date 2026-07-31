@@ -1,3 +1,5 @@
+/** @format */
+
 import { BuiltInAgent } from "@copilotkit/runtime/v2"; // ⚠️ /v2, not the root
 import { CopilotRuntime } from "@copilotkit/runtime";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
@@ -25,7 +27,9 @@ When you report a marker, give its log2FC and FDR, and mention pctIn/pctOut when
 
 Every tool returns {success, message}. If success is false, tell the user what went wrong and what you'll try instead.
 
-If the user refers to an ambiguous cell type that maps to more than one exact cluster label (e.g. "T cells" -> CD4/CD8, "monocytes" -> CD14+/FCGR3A+) and it is not already clear from context which one they mean, call ask_user_choice with the specific labels as options instead of guessing or silently picking one. Wait for their answer before proceeding; if they cancel, ask a follow-up question in text instead of guessing.`;
+If the user refers to an ambiguous cell type that maps to more than one exact cluster label (e.g. "T cells" -> CD4/CD8, "monocytes" -> CD14+/FCGR3A+) and it is not already clear from context which one they mean, call ask_user_choice with the specific labels as options instead of guessing or silently picking one. Wait for their answer before proceeding; if they cancel, ask a follow-up question in text instead of guessing.
+
+The answer must be a summarize short and easy for weak English user to understand, only give a long explaination if user asked for`;
 
 export const runtime = new CopilotRuntime({
   agents: {

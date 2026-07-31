@@ -19,13 +19,26 @@ import { StepCard } from "../../components/StepCard";
 import { useViewStore } from "../../state/useViewStore";
 import { displayGenes } from "../../lib/geneDisplay";
 import type { GeneVector } from "../../lib/types";
+import { MAX_GENES } from "../../lib/constants";
 
+/**
+ * ⚠️ Deliberately NOT capped in the schema. It used to say "up to 4", which
+ * made the model quietly truncate a 10-gene request to 4 and say nothing —
+ * the user asked for ten genes and got four with no explanation. Now the
+ * model passes everything the user asked for and the handler reports exactly
+ * what was shown and what was left out. Silent truncation is worse than a
+ * limit, because the user cannot tell it happened.
+ */
 const paramsSchema = z.object({
   genes: z
     .array(z.string())
     .min(1)
     .describe(
-      "Up to 4 HGNC gene symbols to display, e.g. ['CD3D', 'MS4A1']. Use search_genes first if unsure a symbol exists."
+      "Every HGNC gene symbol the user asked for, e.g. ['CD3D', 'MS4A1'] — " +
+        "do NOT pre-truncate this list. The scatter can only draw a few at " +
+        "once; if there are too many the tool shows the first ones and tells " +
+        "you which were omitted, so you can relay that to the user. Use " +
+        "search_genes first if unsure a symbol exists."
     ),
 });
 
@@ -36,16 +49,34 @@ export function useQueryGenesTool(): void {
     {
       name: "query_genes",
       description:
-        "Show gene expression on the scatter plot for up to 4 gene symbols (switches colour mode to expression).",
+        "Show gene expression on the scatter plot (switches colour mode to " +
+        "expression). Pass every gene the user named — the tool will draw as " +
+        "many as fit and tell you which it could not, so relay that instead " +
+        "of shortening the list yourself.",
       parameters: paramsSchema,
       handler: async ({ genes: requested }, { signal }) => {
         try {
           let shown: GeneVector[] | null = null;
           let errorMsg: string | null = null;
 
+          // Over-cap handling lives here, not in `displayGenes`: the manual
+          // gene box adds one chip at a time, where "reject, you're at the
+          // limit" is the right answer. An agent asked for ten genes means
+          // "show me these", so take the first MAX_GENES as a fresh set
+          // rather than refusing outright — and report the omission.
+          const cleaned = requested
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+          const overCap = cleaned.length > MAX_GENES;
+          const toShow = overCap ? cleaned.slice(0, MAX_GENES) : cleaned;
+          const omitted = overCap ? cleaned.slice(MAX_GENES) : [];
+          // A request at or over the cap replaces what's on screen; merging
+          // would silently drop part of what the user just asked for.
+          const baseline = overCap ? [] : genes;
+
           await displayGenes(
-            requested,
-            genes,
+            toShow,
+            baseline,
             {
               showGenes: (g) => {
                 shown = g;
@@ -71,9 +102,7 @@ export function useQueryGenesTool(): void {
           }
 
           const requestedUpper = new Set(
-            requested
-              .map((s) => s.trim().toUpperCase())
-              .filter((s) => s.length > 0)
+            toShow.map((s) => s.toUpperCase())
           );
           const shownList = shown as GeneVector[];
           const found = shownList.filter((g) =>
@@ -86,16 +115,25 @@ export function useQueryGenesTool(): void {
             (u) => !shownUpper.has(u)
           );
 
+          // Say the quiet part out loud: if the request was trimmed, that
+          // fact leads the message so the model relays it instead of
+          // reporting a clean success for a partial job.
+          const capNote = overCap
+            ? `Only ${MAX_GENES} genes can be drawn at once (one scatter panel each), so ${omitted.length} of the ${cleaned.length} you asked for were not shown: ${omitted.join(", ")}. `
+            : "";
+
           return {
             success: found.length > 0,
+            truncated: overCap,
+            omitted,
             message: found.length
-              ? `${found
+              ? `${capNote}${found
                   .map(
                     (r) =>
                       `${r.gene} — ${r.values.length} values, range ${r.min.toFixed(2)}–${r.max.toFixed(2)}`
                   )
                   .join("; ")}${notFound.length ? `. Not found: ${notFound.join(", ")}` : ""}`
-              : `None of these symbols exist: ${notFound.join(", ")}. Use search_genes to find the right symbol.`,
+              : `${capNote}None of these symbols exist: ${notFound.join(", ")}. Use search_genes to find the right symbol.`,
             notFound,
           };
         } catch (e) {
