@@ -4,7 +4,8 @@ import { DatasetProvider } from "./state/useDatasetStore";
 import { ViewProvider, useViewStore } from "./state/useViewStore";
 import { ScatterView } from "./components/ScatterView";
 import { Toolbar } from "./components/Toolbar";
-import { RightRail } from "./components/RightRail";
+import { DataRail } from "./components/DataRail";
+import { ChatPanel } from "./components/ChatPanel";
 import { AgentActivityBar } from "./components/AgentActivityBar";
 import { useSingleCellCopilot } from "./hooks/copilot/useSingleCellCopilot";
 import "./styles/panels.css";
@@ -53,11 +54,13 @@ export default function App() {
             <main className="app-main">
               <div className="app-main-content">
                 <ErrorBanner />
-                {/* Plot left, everything else in one tabbed rail right.
-                    The gene box and marker table were briefly a bottom drawer;
-                    horizontally split reads better for a wide plot, and the
-                    rail lets each panel use the full column height instead of
-                    three things fighting over one. */}
+                {/* Three columns, all visible at once: plot · data · chat.
+                    The data panels were briefly tabbed, which defeated the
+                    point of the app — the agent would fill the marker table
+                    while that tab was hidden, so its work was invisible.
+                    Everything the agent can change is now on screen while it
+                    works. Freeing the legend into an overlay paid for the
+                    third column. */}
                 <div className="app-body">
                   <div className="app-work-area">
                     <div className="app-scatter-area">
@@ -67,8 +70,11 @@ export default function App() {
                         app, not the conversation. */}
                     <AgentActivityBar />
                   </div>
+                  <div className="app-data-rail">
+                    <DataRail />
+                  </div>
                   <div className="app-chat-rail">
-                    <RightRail />
+                    <ChatPanel />
                   </div>
                 </div>
               </div>

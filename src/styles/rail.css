@@ -40,123 +40,147 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---- Right rail --------------------------------------------------------- */
+/* ---- Data rail: genes + markers, both always visible --------------------
+   Not tabbed. The agent fills these panels as it works, and a hidden panel
+   means invisible agent work — which is the one thing this app must not do. */
 
-.rail {
+.app-data-rail {
+  flex: 0 0 320px;
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+
+.data-rail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
   height: 100%;
+}
+
+.data-section {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  min-height: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
   overflow: hidden;
 }
 
-.rail-tabs {
+/* The marker table takes whatever height is left; its own body scrolls. */
+.data-section-grow {
+  flex: 1 1 auto;
+}
+
+.data-section-head {
   display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
   flex: 0 0 auto;
-  gap: 2px;
-  padding: var(--space-1);
-  border-bottom: 1px solid var(--line);
-  background: var(--surface-sunken);
+  padding: var(--space-2) var(--space-3) 0;
 }
 
-.rail-tab {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1 1 0;
-  /* 30px tall — comfortably clickable on desktop without wasting rail height */
-  padding: 6px var(--space-2);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  cursor: pointer;
-  font: inherit;
+.data-section-head h2 {
+  margin: 0;
   font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--ink-muted);
-  transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out);
-}
-
-.rail-tab:hover {
-  background: var(--surface-hover);
+  font-weight: 600;
   color: var(--ink);
+  letter-spacing: 0;
 }
 
-.rail-tab.is-active {
-  background: var(--surface);
-  color: var(--accent);
-  font-weight: 600;
-  box-shadow: 0 1px 2px rgba(16, 24, 32, 0.06);
-}
-
-.rail-tab:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-/* Live count for a panel you cannot currently see — the reason tabs are
-   acceptable here at all. */
-.rail-tab-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 17px;
-  height: 17px;
-  padding: 0 5px;
-  border-radius: 9px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.68rem;
-  font-weight: 600;
+/* Live count — a quiet second signal that the agent just changed something. */
+.data-section-count {
+  font-size: 0.7rem;
+  color: var(--ink-muted);
   font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
-.rail-tab.is-active .rail-tab-badge {
-  background: var(--accent);
-  color: #ffffff;
+/* Flash on change. Fires for agent tool calls AND manual edits — the panel
+   is reporting "my contents changed", not "an AI touched me". Fades rather
+   than blinks so it reads as a settle, not an alarm. */
+@keyframes data-section-flash {
+  0% {
+    background-color: var(--accent-soft);
+    border-color: var(--accent);
+  }
+  100% {
+    background-color: var(--surface);
+    border-color: var(--line);
+  }
 }
 
-.rail-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+.data-section.is-flashing {
+  animation: data-section-flash 1100ms var(--ease-out);
 }
 
-.rail-panel {
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+@media (prefers-reduced-motion: reduce) {
+  /* Keep the signal, drop the animation: a static tinted border for the same
+     window still tells you which panel changed. */
+  .data-section.is-flashing {
+    animation: none;
+    border-color: var(--accent);
+    background-color: var(--accent-soft);
+  }
 }
 
-/* The assistant panel stays mounted so the transcript survives tab switches;
-   `display:none` is what hides it. Do not swap this for conditional render. */
-.rail-panel.is-hidden {
-  display: none;
-}
-
-/* Inside the rail the panels are already framed by it — drop their own
-   borders so we never get a box inside a box. */
-.rail-panel .gene-panel,
-.rail-panel .deg-panel {
+/* The section frames these already — no box inside a box. */
+.data-section .gene-panel,
+.data-section .deg-panel {
   border: none;
   border-radius: 0;
+  background: transparent;
+}
+
+.data-section .gene-panel {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.data-section .gene-panel-input-row {
+  width: 100%;
+}
+
+.data-section .deg-panel {
   flex: 1 1 auto;
   min-height: 0;
 }
 
-.rail-panel .gene-panel {
-  flex: 0 0 auto;
-  display: block;
+/* Narrow column: let the marker table scroll sideways rather than crushing
+   the numeric columns into unreadable widths. */
+.data-section .deg-table-wrap {
+  overflow: auto;
 }
 
-.rail-panel .gene-panel-input-row {
-  width: 100%;
+.data-section .deg-table {
+  max-width: none;
+  min-width: 19rem;
+}
+
+/* Below ~1500px the two fixed rails (320 + 420) start eating the plot. Give
+   the width back to the scatter rather than letting it become a stamp — the
+   rails degrade fine, the plot doesn't. Loaded after chat.css, so this
+   override of .app-chat-rail wins. */
+@media (max-width: 1500px) {
+  .app-data-rail {
+    flex-basis: 270px;
+  }
+  .app-chat-rail {
+    flex: 0 0 350px;
+  }
+}
+
+@media (max-width: 1180px) {
+  .app-data-rail {
+    flex-basis: 240px;
+  }
+  .app-chat-rail {
+    flex: 0 0 310px;
+  }
 }
 
 /* ---- Ramp control ------------------------------------------------------- */
