@@ -30,8 +30,8 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.63",
-    "@copilotkit/react-core": "^1.64.1",
-    "@copilotkit/runtime": "^1.64.1",
+    "@copilotkit/react-core": "1.64.1",
+    "@copilotkit/runtime": "1.64.1",
     "@deck.gl/core": "^9.3.7",
     "@deck.gl/layers": "^9.3.7",
     "@deck.gl/react": "^9.3.7",
