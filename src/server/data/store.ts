@@ -92,6 +92,12 @@ export function findGenes(
   limit: number,
 ): { genes: { symbol: string; nCellsExpressing: number }[]; total: number; truncated: boolean } {
   const query = q.trim().toUpperCase();
+
+  // Empty query returns no matches
+  if (query === "") {
+    return { genes: [], total: 0, truncated: false };
+  }
+
   const prefixMatches: number[] = [];
   const substringMatches: number[] = [];
 
@@ -103,7 +109,10 @@ export function findGenes(
 
   const ordered = prefixMatches.concat(substringMatches);
   const total = ordered.length;
-  const sliced = ordered.slice(0, limit);
+
+  // Clamp limit to non-negative integer; treat negative or NaN as 0
+  const clampedLimit = limit >= 0 ? Math.floor(limit) : 0;
+  const sliced = ordered.slice(0, clampedLimit);
 
   const genes = sliced.map((j) => ({
     symbol: d.meta.genes[j],

@@ -22,8 +22,16 @@ function readTyped<T>(path: string, ctor: TypedArrayCtor<T>): T {
 export function loadDataset(): Dataset {
   if (cached) return cached;
 
-  if (!fs.existsSync("data/pbmc3k.meta.json")) {
-    throw new Error("data/ is missing — run `npm run prep` first");
+  const requiredFiles = [
+    "data/pbmc3k.meta.json",
+    "data/pbmc3k.X.data.f32",
+    "data/pbmc3k.X.indices.i32",
+    "data/pbmc3k.X.indptr.i32",
+  ];
+
+  const missing = requiredFiles.filter((f) => !fs.existsSync(f));
+  if (missing.length > 0) {
+    throw new Error(`data/ is incomplete — missing: ${missing.join(", ")}. Run \`npm run prep\` first`);
   }
 
   const meta: Meta = JSON.parse(fs.readFileSync("data/pbmc3k.meta.json", "utf8"));
