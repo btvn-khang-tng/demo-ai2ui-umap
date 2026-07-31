@@ -53,7 +53,18 @@
   background: #ffffff;
 }
 
-/* Layout: scatter view + a fixed-width side rail of panels. */
+/* Semantic z-index scale. Arbitrary values (999, 9999) make stacking bugs
+   unfixable; these are the only layers this app has. */
+:root {
+  --z-overlay: 10; /* legend / colorbar floating on the scatter canvas */
+  --z-sticky: 20; /* sticky table headers inside the drawer */
+  --z-banner: 30; /* app-level error banner */
+}
+
+/* Layout: work area (scatter above, panel drawer below) + the chat rail.
+   The panels were a fixed 320px side column and the legend another 220px;
+   with the 420px chat rail that left the plot less than half the window.
+   Stacking gives the scatter full width, which a landscape UMAP wants. */
 .app-main-content {
   display: flex;
   flex-direction: column;
@@ -70,32 +81,51 @@
   gap: 1rem;
 }
 
+.app-work-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  gap: 0.5rem;
+}
+
 .app-scatter-area {
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
 }
 
-.app-side-rail {
-  flex: 0 0 320px;
+/* The drawer is content-sized but capped, so a 100-row marker table can
+   never squeeze the plot out. Its own table scrolls instead. */
+.app-drawer {
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.4rem;
+  max-height: 32vh;
   min-height: 0;
-  overflow-y: auto;
 }
 
-/* Gene panel */
+/* Gene panel — one row in the drawer: input on the left, chips flowing to
+   its right. Stacked it wasted a full row of height on an input that only
+   needs ~17rem. */
 .gene-panel {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
   border: 1px solid #d9dfe4;
   border-radius: 8px;
   background: #ffffff;
-  padding: 0.6rem 0.7rem;
+  padding: 0.4rem 0.6rem;
 }
 
 .gene-panel-input-row {
   display: flex;
   gap: 0.4rem;
+  flex: 0 0 auto;
+  width: 17rem;
 }
 
 .gene-panel-input {
@@ -176,23 +206,27 @@
   border: 1px solid #d9dfe4;
   border-radius: 8px;
   background: #ffffff;
-  padding: 0.6rem 0.7rem;
+  padding: 0.4rem 0.6rem;
   overflow: hidden;
 }
 
 .deg-panel-controls {
   display: flex;
+  align-items: center;
   gap: 0.4rem;
   flex: 0 0 auto;
 }
 
+/* Full width now, so the picker no longer has to stretch to fill a 320px
+   column — it sizes to its longest label and leaves the rest to the table. */
 .deg-panel-controls select {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
+  width: 13rem;
   min-width: 0;
-  padding: 0.35em 0.4em;
+  padding: 0.3em 0.4em;
   border: 1px solid #d9dfe4;
   border-radius: 6px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
 }
 
 .deg-panel-controls button {
@@ -223,8 +257,12 @@
   overflow-y: auto;
 }
 
+/* Capped rather than full-bleed: stretched across ~1130px the five columns
+   drift so far apart that reading one row becomes a saccade exercise.
+   Grouping them keeps gene→log2FC→FDR→pct scannable in one sweep. */
 .deg-table {
   width: 100%;
+  max-width: 58rem;
   border-collapse: collapse;
   font-size: 0.78rem;
 }
@@ -253,6 +291,7 @@
 .deg-table thead th {
   position: sticky;
   top: 0;
+  z-index: var(--z-sticky);
   background: #ffffff;
   font-weight: 600;
   border-bottom: 1px solid #d9dfe4;

@@ -41,12 +41,20 @@ export default function App() {
               <div className="app-main-content">
                 <ErrorBanner />
                 <div className="app-body">
-                  <div className="app-scatter-area">
-                    <ScatterView />
-                  </div>
-                  <div className="app-side-rail">
-                    <GenePanel />
-                    <DegPanel />
+                  {/* Scatter on top, gene + marker panels in a drawer beneath.
+                      Previously both panels were a fixed 320px side column and
+                      the legend another 220px; with the 420px chat rail that
+                      left the plot under half the window. Stacking them gives
+                      the scatter the full working width, which suits a
+                      landscape UMAP better than a narrow portrait strip. */}
+                  <div className="app-work-area">
+                    <div className="app-scatter-area">
+                      <ScatterView />
+                    </div>
+                    <div className="app-drawer">
+                      <GenePanel />
+                      <DegPanel />
+                    </div>
                   </div>
                   <div className="app-chat-rail">
                     <ChatPanel />

@@ -64,12 +64,14 @@ export function ScatterView() {
             panelKey="cluster"
             updateKey={highlighted}
           />
+          {/* Overlaid on the plot, not beside it — a legend column costs the
+              scatter ~220px of width permanently. */}
+          <ClusterLegend
+            clusters={data.clusters}
+            highlighted={highlighted}
+            setHighlight={setHighlight}
+          />
         </div>
-        <ClusterLegend
-          clusters={data.clusters}
-          highlighted={highlighted}
-          setHighlight={setHighlight}
-        />
       </div>
     );
   }

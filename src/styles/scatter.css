@@ -24,9 +24,9 @@
   color: #b91c1c;
 }
 
-/* Cluster mode: canvas fills the remaining space, legend is a fixed side rail. */
+/* Cluster mode: the canvas takes the whole area; the legend floats over it. */
 .scatter-view-cluster {
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .scatter-main {
@@ -40,36 +40,98 @@
   background: #fafbfc;
 }
 
+/* ---- Cluster legend: overlay, top-left ----------------------------------
+   Was a 220px side column. Overlaying it gives that width back to the plot,
+   which is the element that actually benefits from it. Sits above the canvas
+   but below any app-level chrome (see --z-* scale in panels.css).            */
 .cluster-legend {
-  list-style: none;
-  margin: 0;
-  padding: 0.25rem;
-  width: 220px;
-  flex: 0 0 auto;
-  overflow-y: auto;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: var(--z-overlay);
+  max-width: 15rem;
+  padding: 4px;
   border: 1px solid #d9dfe4;
   border-radius: 8px;
-  background: #ffffff;
+  /* Near-opaque rather than translucent: cells scroll underneath and the
+     labels have to stay readable. No blur — this is legibility, not glass. */
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 1px 3px rgba(16, 24, 32, 0.08);
 }
 
-.cluster-legend li + li {
-  margin-top: 2px;
+.cluster-legend-head {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 2px 2px 2px 4px;
+}
+
+.cluster-legend-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1 1 auto;
+  padding: 2px 4px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  /* #43505c on white = 8.0:1 — comfortably past the 4.5:1 floor. */
+  color: #43505c;
+  letter-spacing: 0.01em;
+}
+
+.cluster-legend-toggle:hover {
+  background: #eef2f5;
+}
+
+.cluster-legend-chevron {
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.cluster-legend-clear {
+  flex: 0 0 auto;
+  padding: 2px 6px;
+  border: 1px solid #d9dfe4;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.68rem;
+  color: #43505c;
+}
+
+.cluster-legend-clear:hover {
+  background: #eef2f5;
+}
+
+.cluster-legend-list,
+.cluster-legend-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
 .cluster-legend-entry {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.4rem;
   width: 100%;
-  padding: 0.4rem 0.5rem;
+  /* Tightened from 0.4/0.5rem — 8 rows in a corner overlay need density,
+     and the hit target stays ~22px tall. */
+  padding: 0.15rem 0.3rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 4px;
   background: transparent;
   cursor: pointer;
   font: inherit;
   color: inherit;
   text-align: left;
-  transition: background-color 150ms, opacity 150ms;
+  transition: background-color 150ms ease-out, opacity 150ms ease-out;
 }
 
 .cluster-legend-entry:hover {
@@ -86,9 +148,9 @@
 }
 
 .cluster-legend-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
   flex: 0 0 auto;
 }
 
@@ -98,14 +160,55 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.85rem;
+  font-size: 0.74rem;
 }
 
 .cluster-legend-count {
   flex: 0 0 auto;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   color: #52606d;
   font-variant-numeric: tabular-nums;
+}
+
+/* Collapsed: a row of swatches. The colour→cluster mapping is what the plot
+   actually needs; the labels are recoverable via tooltip and by re-opening. */
+.cluster-legend-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  padding: 2px 4px 4px;
+}
+
+.cluster-legend-dot {
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+
+.cluster-legend-dot:hover {
+  transform: scale(1.15);
+}
+
+.cluster-legend-dot.is-dimmed {
+  opacity: 0.35;
+}
+
+.cluster-legend-dot[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 3px #43505c;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cluster-legend-entry,
+  .cluster-legend-dot {
+    transition: none;
+  }
+  .cluster-legend-dot:hover {
+    transform: none;
+  }
 }
 
 /* Expression mode: small multiples grid. */
