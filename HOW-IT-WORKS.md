@@ -140,7 +140,7 @@ The AI does **not** draw anything. It **presses the same buttons you press**.
 
 ### The idea
 
-The AI is given a list of 5 "tools". A tool is just a function with a name and
+The AI is given a list of 7 "tools". A tool is just a function with a name and
 a description. The AI can ask to run one.
 
 | Tool | What it does |
@@ -150,6 +150,8 @@ a description. The AI can ask to run one.
 | `color_by_cluster` | Go back to cell-type colours |
 | `search_genes` | Check a gene name exists |
 | `highlight_clusters` | Fade out the cells you did not ask about |
+| `set_color_ramp` | Switch the colour scale (grey→red / viridis) |
+| `ask_user_choice` | **Stop and ask you a question** — see below |
 
 ### The loop
 
@@ -201,6 +203,41 @@ Every tool call draws a small card in the chat:
 ```
 
 So you can always see what the AI is doing. Nothing happens invisibly.
+
+### Rule 3 — the AI can ask you a question
+
+Some requests are ambiguous. "T cells" could mean CD4 or CD8. Instead of
+guessing, the AI can call `ask_user_choice`, which **pauses the whole run**
+and shows real buttons in the chat:
+
+```
+There are two T cell populations: CD4 T cells and CD8 T cells.
+   [ CD4 T cells ]  [ CD8 T cells ]  [ Cancel ]
+```
+
+Nothing continues until you click. When you do, your answer is sent back to
+the AI and it carries on.
+
+⚠️ Important for anyone editing this: **every** way out of that card must send
+an answer back — including Cancel. If a path forgets, the AI waits forever.
+
+### You can stop it
+
+While the AI is working, a **Stop** button appears in the bar under the map.
+It cancels the run *and* any request already in flight, so a slow calculation
+does not land after you gave up on it.
+
+### The chat can draw charts, and the charts are buttons
+
+A tool's result does not have to be text. When the AI finishes finding marker
+genes, the answer arrives in the chat as a **bar chart** of the top 10.
+
+And the chart is not a picture — **clicking a bar puts that gene on the map**.
+It goes through the same code as typing the gene by hand, so the chat and the
+app can never disagree.
+
+This is the most important idea in the project: the chat is not a log of what
+the app did. It is part of the app.
 
 ---
 
