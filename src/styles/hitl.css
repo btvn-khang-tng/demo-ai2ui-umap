@@ -138,3 +138,59 @@
     transition: none;
   }
 }
+
+/* Free-text answer — for options the model did not think of. */
+.hitl-freetext {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.hitl-freetext-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--hitl-line);
+  border-radius: var(--hitl-radius-sm);
+  background: var(--hitl-surface);
+  color: var(--hitl-ink);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.hitl-freetext-input::placeholder {
+  /* #4a6b80 on white = 6.1:1 — placeholders need the same 4.5:1 floor as
+     body text, which the browser default grey does not meet. */
+  color: var(--hitl-ink-muted);
+}
+
+.hitl-freetext-input:focus-visible {
+  outline: 2px solid var(--hitl-accent);
+  outline-offset: 1px;
+}
+
+.hitl-freetext-send {
+  flex: 0 0 auto;
+  padding: 4px 10px;
+  border: 1px solid var(--hitl-accent);
+  border-radius: var(--hitl-radius-sm);
+  background: var(--hitl-surface);
+  color: var(--hitl-accent);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hitl-freetext-send:hover:not(:disabled) {
+  background: var(--hitl-accent-hover);
+  border-color: var(--hitl-accent-hover);
+  color: var(--hitl-on-accent);
+}
+
+.hitl-freetext-send:disabled,
+.hitl-option-btn:disabled,
+.hitl-cancel-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

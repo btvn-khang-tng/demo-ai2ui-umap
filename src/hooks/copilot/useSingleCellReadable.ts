@@ -87,7 +87,20 @@ export function useSingleCellReadable(): void {
       description:
         "GROUND TRUTH — exactly what the single-cell viewer is showing right now. " +
         "Always trust this over conversation memory. If the user says 'it', 'that gene', " +
-        "'the highlighted ones' or 'that colour', resolve it from here.",
+        "'the highlighted ones' or 'that colour', resolve it from here. " +
+        // Without the next two sentences the model treats a conflict as proof
+        // that the context is stale. Observed: after the user pressed "Reset
+        // view", this block correctly reported displayedGenes: [], and the
+        // model reasoned "the ground truth must have been captured before my
+        // tool calls" and answered from its own transcript instead — telling
+        // the user two genes were displayed when the scatter was empty.
+        "This block is RECOMPUTED AND RESENT WITH EVERY MESSAGE. It is never stale and " +
+        "never cached from earlier in the conversation. " +
+        "The user also drives this UI directly with buttons — Reset view, the gene box, " +
+        "clicking the legend — so the state CAN change without any tool call from you. " +
+        "If this disagrees with what you remember doing, the user changed it by hand: " +
+        "this block is right and your memory is out of date. Never tell the user something " +
+        "is on screen when this says it is not.",
       value: {
         dataset: "pbmc3k — 2,638 human PBMCs, log1p-normalized",
         nCells: data?.nCells ?? null,

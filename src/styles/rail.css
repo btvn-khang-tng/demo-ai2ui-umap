@@ -20,6 +20,14 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  /* ⚠️ Without this, a flex item defaults to `min-width: auto`, which means
+     it REFUSES to shrink below its content's min-content width. The marker
+     table has `min-width: 19rem`, so the rail silently grew from 270px to
+     352px and stole that width from the plot — which does have min-width: 0
+     and therefore absorbed the entire loss. With enough content the plot
+     collapses toward zero and appears to "disappear".
+     Measured: work 579→514, data 287→352 after one 2-gene query. */
+  min-width: 0;
 }
 
 .data-rail {
@@ -127,9 +135,16 @@
   overflow: auto;
 }
 
+/* The wrapper scrolls (overflow:auto above), so the table may exceed the
+   rail — but it must not PUSH the rail. min-width lives on the table, and the
+   rail's own `min-width: 0` is what stops it propagating outward. */
 .data-section .deg-table {
   max-width: none;
   min-width: 19rem;
+}
+
+.data-section .deg-table-wrap {
+  min-width: 0;
 }
 
 /* Below ~1500px the two fixed rails (320 + 420) start eating the plot. Give

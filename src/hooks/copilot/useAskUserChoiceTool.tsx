@@ -24,6 +24,7 @@
  * is never invoked leaves the agent waiting forever, so Cancel is not an
  * afterthought here: it resolves with a plain string the model can act on.
  */
+import { useState } from "react";
 import { useHumanInTheLoop } from "@copilotkit/react-core";
 import "../../styles/hitl.css";
 
@@ -31,6 +32,100 @@ import "../../styles/hitl.css";
  * sentence, not a code, so the model can relay it to the user directly
  * without needing to special-case the value. */
 const CANCELLED = "User declined to choose; do not guess — ask a follow-up question instead.";
+
+/**
+ * The interactive branch, as a real component so it can own input state.
+ *
+ * Buttons cover the options the model thought of. The text box covers the
+ * ones it did not — "neither, use NK cells", "both", "actually show me
+ * GZMB". Without it the user's only escape from a wrong pair of options is
+ * Cancel, which throws away the turn.
+ *
+ * `respond` must fire exactly once. `sent` guards every path: a double click,
+ * or Enter followed by a button click, would otherwise resolve the same tool
+ * call twice.
+ */
+function ChoicePrompt({
+  question,
+  options,
+  onRespond,
+}: {
+  question: string;
+  options: string[];
+  onRespond: (value: string) => void;
+}) {
+  const [text, setText] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const send = (value: string) => {
+    if (sent) return;
+    const v = value.trim();
+    if (!v) return;
+    setSent(true);
+    onRespond(v);
+  };
+
+  return (
+    <div className="hitl-card hitl-card-executing" role="group" aria-label={question}>
+      <div className="hitl-card-body">
+        <div className="hitl-question">{question}</div>
+
+        <div className="hitl-options">
+          {options.map((option) => (
+            <button
+              key={option}
+              type="button"
+              className="hitl-option-btn"
+              disabled={sent}
+              onClick={() => send(option)}
+            >
+              {option}
+            </button>
+          ))}
+          <button
+            type="button"
+            className="hitl-cancel-btn"
+            disabled={sent}
+            onClick={() => {
+              if (sent) return;
+              setSent(true);
+              onRespond(CANCELLED);
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+
+        {/* Free-text escape hatch for answers the model did not offer. */}
+        <div className="hitl-freetext">
+          <input
+            type="text"
+            className="hitl-freetext-input"
+            placeholder="Or type your own answer…"
+            value={text}
+            disabled={sent}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                send(text);
+              }
+            }}
+            aria-label="Type your own answer"
+          />
+          <button
+            type="button"
+            className="hitl-freetext-send"
+            disabled={sent || !text.trim()}
+            onClick={() => send(text)}
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function useAskUserChoiceTool(): void {
   useHumanInTheLoop(
@@ -90,36 +185,17 @@ export function useAskUserChoiceTool(): void {
           );
         }
 
-        // status === "executing" — `respond` is guaranteed defined here, and
-        // every button below calls it exactly once. This is the only render
-        // branch a user can interact with, and the only one where leaving a
-        // button unclicked leaves the tool call (and the agent) waiting.
+        // status === "executing" — the only interactive branch. `respond` is
+        // guaranteed defined here. ChoicePrompt owns the guarantee that it is
+        // called exactly once; leaving it uncalled leaves the agent waiting
+        // forever.
         const { respond } = props;
         return (
-          <div className="hitl-card hitl-card-executing" role="group" aria-label={question}>
-            <div className="hitl-card-body">
-              <div className="hitl-question">{question}</div>
-              <div className="hitl-options">
-                {options.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    className="hitl-option-btn"
-                    onClick={() => respond(option)}
-                  >
-                    {option}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  className="hitl-cancel-btn"
-                  onClick={() => respond(CANCELLED)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
+          <ChoicePrompt
+            question={question}
+            options={options}
+            onRespond={(value) => respond(value)}
+          />
         );
       },
     },

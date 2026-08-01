@@ -92,7 +92,11 @@
 
 .app-scatter-area {
   flex: 1 1 auto;
-  min-width: 0;
+  /* A floor, not 0. min-width:0 let the plot absorb every pixel a
+     misbehaving sibling demanded, until it vanished. Now it refuses to go
+     below 280px — if something else overflows, the PAGE scrolls and the bug
+     is visible, instead of the plot silently disappearing. */
+  min-width: 280px;
   min-height: 0;
 }
 
