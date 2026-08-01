@@ -2,6 +2,9 @@
 
 A simple guide. Short sentences on purpose.
 
+> Want more depth? **`ARCHITECTURE.md`** has the folder map, the measured
+> call trace, and where every piece of the chat UI comes from.
+
 ---
 
 ## 1. What the app does
@@ -175,6 +178,86 @@ a description. The AI can ask to run one.
 
 Step 5 is the important one. **The AI only learns what happened because we
 send the result back.** There is no other channel.
+
+### Each round is a NEW request
+
+This surprises most people:
+
+> One question from you does **not** mean one request to the AI.
+> **2 tools used = 3 requests.**
+
+The AI has **no memory** and **no open connection**. Each round we send the
+whole conversation again, from the start.
+
+```
+Request 1 ─▶ your question + what the AI can do + what is on screen
+         ◀─ "run run_deg"                    ✂ connection closes
+
+            browser runs it. THE SCREEN CHANGES NOW.
+            (the AI still does not know this!)
+
+Request 2 ─▶ everything above + THE RESULT
+         ◀─ "run query_genes"                ✂ connection closes
+
+            browser runs it. Screen changes again.
+
+Request 3 ─▶ everything above + the 2nd result
+         ◀─ the final answer                 ✂ done
+```
+
+Notice: **the screen changes before the AI knows.** The browser acts
+immediately. The AI is told afterwards.
+
+### How does it know if the tool worked?
+
+**It reads English.** Nothing else.
+
+Your tool gives back a small object:
+
+```js
+{ success: true, message: "100 markers for B cells" }
+```
+
+We put that text into the next request. The AI reads it like a normal
+message.
+
+If something failed:
+
+```js
+{ success: false,
+  message: "Unknown group 'T cell'. Valid labels: CD4 T cells, CD8 T cells, …" }
+```
+
+The AI reads that and tries again with a correct name.
+
+> 💡 This is why the error text lists the correct options.
+> **The error message is written for the AI, not for you.**
+
+### When does it stop?
+
+**When the AI's answer has no tool in it.**
+
+```
+   AI answer has a tool?  ──YES──▶  run it, send result, ask again
+            │
+            NO
+            ▼
+        FINISHED  →  status shows "Ready"
+```
+
+There is **no code** that decides "the task is done". Our app cannot know
+that. The AI decides, by not asking for another tool.
+
+Three ways a run can end:
+
+| | How it ends | Who decides |
+|---|---|---|
+| 1 | answer has no tool call | the AI |
+| 2 | 10 rounds reached (`maxSteps`) | our safety limit |
+| 3 | you press **Stop** | you |
+
+The limit of 10 is a safety net against a confused AI looping forever.
+A normal question uses only **2 or 3** rounds.
 
 ### Two rules that matter
 

@@ -3,6 +3,9 @@
 Everything an engineer needs to work on this app.
 Short sentences on purpose. Diagrams over paragraphs.
 
+> New to the project? Read **`HOW-IT-WORKS.md`** first — it is the gentler
+> version. This file assumes you will be changing the code.
+
 ---
 
 ## 1. What this app is
@@ -333,6 +336,72 @@ anything. It answered:
 
 This is the readable (§6) paying for itself: state it can see is state it
 does not have to recompute.
+
+---
+
+## 4c. When does the loop STOP?
+
+Short answer: **when the AI's reply has no tool call in it.**
+
+Every reply from the AI is one of two shapes:
+
+```
+  Shape A                          Shape B
+  ───────────────────────────      ───────────────────────────
+  text + TOOL_CALL                 text only
+        │                                │
+        ▼                                ▼
+  browser runs the tool            nothing to run
+  sends result back                       │
+  → LOOP AGAIN                            ▼
+                                   RUN_FINISHED → "Ready"
+```
+
+That is the entire rule. There is **no code** that checks "is the task
+complete?". Our app cannot know that. The AI decides it is done by simply
+**not asking for another tool**.
+
+### Three ways a run can end
+
+| # | Ending | Who decides | What you see |
+|---|---|---|---|
+| 1 | **Normal** — reply has no tool call | the AI | status → "Ready" |
+| 2 | **Step limit** — `maxSteps: 10` | our config (`llm.ts`) | run stops after 10 rounds |
+| 3 | **You press Stop** | you | `abortRun()` → status → "Ready" |
+
+### Why the step limit exists
+
+Without it, a confused model could loop forever:
+
+```
+   "call run_deg"  →  result  →  "call run_deg"  →  result  →  …
+```
+
+Each round costs an LLM request. `maxSteps: 10` is the circuit breaker.
+A normal question uses **2–3** rounds, so 10 is generous.
+
+```
+   maxSteps: 10   ← in src/server/llm.ts
+   ├─ typical question .......... 2-3 rounds
+   ├─ with a HITL pause ......... 3-4 rounds
+   └─ runaway loop .............. cut off at 10
+```
+
+### What makes the AI choose to stop
+
+The system prompt (`SYSTEM_PROMPT` in `llm.ts`) tells it the shape of a
+finished job. For example this line:
+
+> "call `run_deg`, say one sentence naming the marker you picked, then
+> IMMEDIATELY call `query_genes` on that exact gene in your next turn.
+> Asking permission to visualize is a failure to complete the task."
+
+Before that line existed, the AI ran `run_deg`, described the result, and
+**stopped early** — asking "would you like me to visualise this?" It thought
+it was finished. The prompt is what defines "finished".
+
+> ⚠️ So if the AI stops too early or loops too long, the fix is almost always
+> **the system prompt**, not the code.
 
 ---
 
