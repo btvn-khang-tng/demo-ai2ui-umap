@@ -226,6 +226,32 @@ Three endings: reply has no tool · depth 100 · you press **Stop**.
 | — | map recolour + chip | `displayGenes()` | `geneDisplay.ts` |
 | — | bar under the map | same hook, 2nd place | `AgentActivityBar.tsx` |
 
+### Who renders the "thinking" text?
+
+Two consumers, one event stream. Only the second is ours.
+
+```
+gateway: reasoning_content
+   │
+   ▼ @ai-sdk/openai-compatible   → AI SDK reasoning parts
+   ▼ BuiltInAgent                → AG-UI REASONING_* events
+   ▼ @ag-ui/client               → role:"reasoning" message
+   │
+   ├─▶ ① CopilotChat → CopilotChatReasoningMessage
+   │      the "Thought for N seconds" collapsible panel
+   │      LIBRARY. We render nothing — we only mount <CopilotChat />.
+   │
+   └─▶ ② our useAgentPhase.ts
+          onReasoningMessageContentEvent → setReasoning(buffer)
+          the truncated line in the status bar / chat pill. 3 lines of code.
+```
+
+⚠️ Both die if you swap the provider. `@ai-sdk/openai`'s `.chat()` has no
+`reasoning_content` handling and drops the tokens silently — no
+`REASONING_*` events, no panel, no status text, and no error to tell you why.
+That is the real reason for `@ai-sdk/openai-compatible`.
+
+
 **One tool call → three destinations:**
 
 ```
