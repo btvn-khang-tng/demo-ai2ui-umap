@@ -366,26 +366,59 @@ complete?". Our app cannot know that. The AI decides it is done by simply
 | # | Ending | Who decides | What you see |
 |---|---|---|---|
 | 1 | **Normal** — reply has no tool call | the AI | status → "Ready" |
-| 2 | **Step limit** — `maxSteps: 10` | our config (`llm.ts`) | run stops after 10 rounds |
+| 2 | **Depth limit** — 100 follow-ups | CopilotKit (hardcoded) | console warning, loop stops |
 | 3 | **You press Stop** | you | `abortRun()` → status → "Ready" |
 
-### Why the step limit exists
+### WHERE the loop actually lives
 
-Without it, a confused model could loop forever:
+**Not in our code.** It is in `@copilotkit/core` → class `RunHandler`
+(`node_modules/@copilotkit/core/dist/index.mjs`). It is *recursion*, not a
+`for` loop:
+
+```js
+async processAgentResult({ runAgentResult, agent }) {
+  let needsFollowUp = false;
+
+  // walk the AI's reply, run any tool it asked for
+  for (const message of newMessages)
+    for (const toolCall of message.toolCalls || []) {
+      if (await this.executeSpecificTool(tool, toolCall, …))
+        needsFollowUp = true;              // a tool ran → ask the AI again
+    }
+
+  if (needsFollowUp && !aborted) {
+    if (this._runDepth >= MAX_FOLLOW_UP_DEPTH) logger.warn(…)
+    else return await this.runAgent({ agent });   // ◀── THE RECURSION
+  }
+  return runAgentResult;                    // no tool ran → run is over
+}
+```
 
 ```
-   "call run_deg"  →  result  →  "call run_deg"  →  result  →  …
+   runAgent() ──▶ processAgentResult() ──┐
+        ▲                                │
+        └──── needsFollowUp === true ────┘
 ```
 
-Each round costs an LLM request. `maxSteps: 10` is the circuit breaker.
-A normal question uses **2–3** rounds, so 10 is generous.
+`needsFollowUp` is set **only** if a frontend tool actually executed.
+That single boolean is the whole stop condition.
 
-```
-   maxSteps: 10   ← in src/server/llm.ts
-   ├─ typical question .......... 2-3 rounds
-   ├─ with a HITL pause ......... 3-4 rounds
-   └─ runaway loop .............. cut off at 10
-```
+### ⚠️ `maxSteps: 10` does NOT limit these rounds
+
+Easy to assume it does. It does not.
+
+| Setting | Where | What it really bounds |
+|---|---|---|
+| `MAX_FOLLOW_UP_DEPTH = 100` | CopilotKit core, **hardcoded** | how many browser↔AI rounds — the loop above |
+| `maxSteps: 10` | our `src/server/llm.ts` | AI-SDK stepping **inside one server request** |
+
+`maxSteps` becomes `stopWhen: stepCountIs(10)` on the AI SDK's `streamText`.
+That governs the server executing tools by itself. **All our tools are
+frontend tools** — they have no `execute` on the server — so the SDK reports
+the tool call and stops after one step anyway.
+
+So the real runaway guard is CopilotKit's **100**, not our 10.
+A normal question uses 2–3 rounds, so neither is close to being hit.
 
 ### What makes the AI choose to stop
 

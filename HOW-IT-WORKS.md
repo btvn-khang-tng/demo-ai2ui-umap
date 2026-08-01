@@ -253,11 +253,33 @@ Three ways a run can end:
 | | How it ends | Who decides |
 |---|---|---|
 | 1 | answer has no tool call | the AI |
-| 2 | 10 rounds reached (`maxSteps`) | our safety limit |
+| 2 | 100 rounds reached | CopilotKit's safety net |
 | 3 | you press **Stop** | you |
 
-The limit of 10 is a safety net against a confused AI looping forever.
-A normal question uses only **2 or 3** rounds.
+A normal question uses only **2 or 3** rounds, so the limit is never close.
+
+### Where is this loop written?
+
+**Not in our code.** It lives inside the CopilotKit library:
+
+```
+node_modules/@copilotkit/core  →  class RunHandler
+```
+
+It is written as recursion, not a `for` loop:
+
+```
+   runAgent()  ──▶  processAgentResult()  ──┐
+       ▲                                    │
+       └────  did a tool run?  YES  ────────┘
+                    │
+                    NO
+                    ▼
+                 finished
+```
+
+One boolean called `needsFollowUp` is the whole stop condition.
+It becomes `true` only if a tool actually ran.
 
 ### Two rules that matter
 
