@@ -241,6 +241,101 @@ YOU TYPE: "Query top gene in B Cells"
 
 ---
 
+## 4b. How does the AI know the tool worked? (READ THIS)
+
+This is the part people get wrong. Two facts:
+
+### Fact 1 — it is NOT one request. It is N+1.
+
+**N tool calls = N+1 HTTP requests.**
+
+The AI is **stateless**. No connection stays open. It remembers nothing.
+Every request re-sends the whole conversation from the beginning.
+
+```
+Request 1 ──▶ your message + tools + screen state
+          ◀── "call run_deg"            ✂ CONNECTION CLOSES
+
+              browser runs the tool. Screen changes NOW.
+              (the AI does not know this yet!)
+
+Request 2 ──▶ everything above + THE TOOL RESULT
+          ◀── "call query_genes"        ✂ CONNECTION CLOSES
+
+              browser runs the tool. Screen changes again.
+
+Request 3 ──▶ everything above + the 2nd result
+          ◀── the final answer          ✂ done
+```
+
+### Fact 2 — there is NO success/failure channel. It reads English.
+
+Your handler returns a plain object:
+
+```js
+return { success: true, message: "100 markers for B cells (342 vs 2,296)" };
+```
+
+The browser turns it into a message and puts it in the **next** request:
+
+```json
+{ "role": "tool",
+  "tool_call_id": "call_abc",
+  "content": "{\"success\":true,\"message\":\"100 markers for B cells…\"}" }
+```
+
+The AI reads that text. That is the whole mechanism.
+
+On failure it reads:
+
+```js
+return { success:false,
+         message:"Unknown group 'T cell'. Valid labels: CD4 T cells, CD8 T cells, …" };
+```
+
+…and fixes itself on the next round.
+
+> 💡 That is why the error text lists the valid labels.
+> **The error message is written for the AI, not for the user.**
+
+### Why "return, never throw" is not a style rule
+
+```
+   return {success:false}          throw new Error()
+          │                               │
+          ▼                               ▼
+   result message built           NO result message
+          │                               │
+          ▼                               ▼
+   Request 2 happens              Request 2 NEVER happens
+          │                               │
+          ▼                               ▼
+   AI explains the problem        silence. User sees nothing.
+```
+
+### Worked example — "Highlight top 1 expressed gene in B Cell"
+
+Measured live:
+
+```
+1  POST /api/copilotkit   → AI calls highlight_clusters   (no server call)
+2  POST /api/copilotkit   → AI writes the answer
+
+2 LLM calls · 1 tool call · 0 data calls
+```
+
+**Zero data calls.** The AI saw in the readable that CD79A was already on
+screen and the B-cell table was already loaded, so it did not re-run
+anything. It answered:
+
+> "The top marker gene for B cells is CD79A — and it's already displayed
+> on the scatter plot! Here are its stats…"
+
+This is the readable (§6) paying for itself: state it can see is state it
+does not have to recompute.
+
+---
+
 ## 5. Where does each thing on screen come from?
 
 This is the table people ask for most.
