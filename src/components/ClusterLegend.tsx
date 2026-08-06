@@ -14,7 +14,10 @@
  * `highlight_clusters` tool will call later (Task 14+). There is no separate
  * "UI highlight" path; if there were, the manual click and the agent tool
  * could disagree about what's highlighted.
+ *
+ * @format
  */
+
 import { useState } from "react";
 import type { ClusterInfo } from "../lib/types";
 import { clusterColor } from "../lib/colors";
@@ -25,11 +28,16 @@ export interface ClusterLegendProps {
   setHighlight: (c: string[] | null) => void;
 }
 
-export function ClusterLegend({ clusters, highlighted, setHighlight }: ClusterLegendProps) {
+export function ClusterLegend({
+  clusters,
+  highlighted,
+  setHighlight,
+}: ClusterLegendProps) {
   const [open, setOpen] = useState(true);
 
   const handleClick = (label: string) => {
-    const isSoleHighlight = !!highlighted && highlighted.length === 1 && highlighted[0] === label;
+    const isSoleHighlight =
+      !!highlighted && highlighted.length === 1 && highlighted[0] === label;
     setHighlight(isSoleHighlight ? null : [label]);
   };
 
@@ -42,8 +50,11 @@ export function ClusterLegend({ clusters, highlighted, setHighlight }: ClusterLe
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
         >
-          <span className="cluster-legend-chevron" aria-hidden="true">
-            {open ? "▾" : "▸"}
+          <span
+            className="cluster-legend-chevron"
+            aria-hidden="true"
+          >
+            {open ? "-" : "+"}
           </span>
           <span>{clusters.length} clusters</span>
         </button>
@@ -59,7 +70,10 @@ export function ClusterLegend({ clusters, highlighted, setHighlight }: ClusterLe
       </div>
 
       {open ? (
-        <ul className="cluster-legend-list" aria-label="Cluster legend">
+        <ul
+          className="cluster-legend-list"
+          aria-label="Cluster legend"
+        >
           {clusters.map((c) => {
             const [r, g, b] = clusterColor(c.id);
             const dimmed = !!highlighted && !highlighted.includes(c.label);
@@ -90,7 +104,10 @@ export function ClusterLegend({ clusters, highlighted, setHighlight }: ClusterLe
         /* Collapsed: the colour mapping survives even without labels, so the
            scatter stays interpretable at a glance. Each swatch keeps its own
            click target and tooltip. */
-        <ul className="cluster-legend-strip" aria-label="Cluster legend (collapsed)">
+        <ul
+          className="cluster-legend-strip"
+          aria-label="Cluster legend (collapsed)"
+        >
           {clusters.map((c) => {
             const [r, g, b] = clusterColor(c.id);
             const dimmed = !!highlighted && !highlighted.includes(c.label);

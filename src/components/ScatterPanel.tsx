@@ -12,7 +12,10 @@
  *    data-prep step (Task 2) deliberately left Y un-negated, so `flipY:
  *    false` here is the ONLY place orientation is corrected — never negate
  *    Y anywhere else, or the two corrections cancel out.
+ *
+ * @format
  */
+
 import { useMemo } from "react";
 import DeckGL from "@deck.gl/react";
 import { OrthographicView } from "@deck.gl/core";
@@ -39,7 +42,12 @@ const INITIAL_VIEW_STATE = {
   maxZoom: 10,
 };
 
-export function ScatterPanel({ coords, getColor, panelKey, updateKey }: ScatterPanelProps) {
+export function ScatterPanel({
+  coords,
+  getColor,
+  panelKey,
+  updateKey,
+}: ScatterPanelProps) {
   const layer = useMemo(
     () =>
       new ScatterplotLayer<number>({
@@ -55,7 +63,7 @@ export function ScatterPanel({ coords, getColor, panelKey, updateKey }: ScatterP
       }),
     // ScatterplotLayer instances are cheap to recreate; deck.gl diffs by id.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [coords, panelKey, updateKey]
+    [coords, panelKey, updateKey],
   );
 
   return (
@@ -64,6 +72,7 @@ export function ScatterPanel({ coords, getColor, panelKey, updateKey }: ScatterP
       controller={true}
       initialViewState={INITIAL_VIEW_STATE}
       layers={[layer]}
+      style={{ background: "black" }}
     />
   );
 }
